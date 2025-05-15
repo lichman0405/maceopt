@@ -47,6 +47,7 @@ async def optimize_route(
     return JSONResponse(content=result)
 
 # API route for downloading optimized structure
+
 @router.get("/download")
 async def download_structure(filename: str = Query(..., description="Optimized XYZ filename")):
     logger.rule(f"[bold blue]API - Download Request: {filename}")
