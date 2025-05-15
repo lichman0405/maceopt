@@ -4,18 +4,14 @@
 
 # app/parser.py
 
+import uuid
+from pathlib import Path
+from dataclasses import dataclass
 from fastapi import UploadFile, File, Form, HTTPException
 from pydantic import BaseModel, Field
-from dataclasses import dataclass
-from pathlib import Path
-import tempfile
-import shutil
-import hashlib
 
 from app.utils import logger
-
-
-ALLOWED_EXTENSIONS = {".xyz"}
+from app.config import DEFAULT_OUTPUT_DIR
 
 
 class OptimizeParams(BaseModel):
@@ -25,10 +21,10 @@ class OptimizeParams(BaseModel):
 
 @dataclass
 class OptimizationRequest:
-    input_path: Path
+    original_path: Path
+    session_id: str
+    output_dir: Path
     params: OptimizeParams
-    original_filename: str
-    file_hash: str
 
 
 def parse_optimization_request(
@@ -36,36 +32,32 @@ def parse_optimization_request(
     fmax: float = Form(0.1),
     device: str = Form("cpu")
 ) -> OptimizationRequest:
-    """
-    Validate and save uploaded structure file, return parsed params and metadata.
-    """
     filename = structure_file.filename
     suffix = Path(filename).suffix.lower()
 
-    logger.print(f"[blue][parser] Received structure file:[/] {filename}")
+    logger.rule("[bold blue]Parsing structure upload")
+    logger.print(f"[cyan]- Uploaded file:[/] {filename}")
 
-    if suffix not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type: {suffix}")
+    if suffix != ".xyz":
+        raise HTTPException(status_code=400, detail="Only .xyz files are supported")
 
-    # Compute file hash (for future caching use)
-    content = structure_file.file.read()
-    file_hash = hashlib.sha256(content).hexdigest()
-    structure_file.file.seek(0)  # reset file cursor
+    # 创建 session ID 和输出目录
+    session_id = f"session_{uuid.uuid4().hex[:8]}"
+    output_dir = DEFAULT_OUTPUT_DIR / session_id
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Save file to a temp path with proper suffix
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        shutil.copyfileobj(structure_file.file, tmp)
-        input_path = Path(tmp.name)
+    # 保存上传结构为 original.xyz
+    original_path = output_dir / "original.xyz"
+    with original_path.open("wb") as f:
+        content = structure_file.file.read()
+        f.write(content)
 
-    logger.print(f"[green][parser] Structure saved to:[/] {input_path}")
-    logger.print(f"[cyan][parser] SHA256 hash:[/] {file_hash}")
-
-    params = OptimizeParams(fmax=fmax, device=device)
-    logger.print(f"[cyan][parser] Parsed params:[/] fmax={params.fmax}, device={params.device}")
+    logger.print(f"[green]- Saved to:[/] {original_path}")
+    logger.print(f"[magenta]- Session:[/] {session_id}")
 
     return OptimizationRequest(
-        input_path=input_path,
-        params=params,
-        original_filename=filename,
-        file_hash=file_hash
+        original_path=original_path,
+        session_id=session_id,
+        output_dir=output_dir,
+        params=OptimizeParams(fmax=fmax, device=device)
     )

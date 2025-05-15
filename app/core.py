@@ -2,10 +2,10 @@
 # Author: Shibo Li
 # Date: 2025-05-15
 
-# app/core/core.py
+# app/core.py
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
 from ase.io import read, write
 from ase.optimize import BFGS
@@ -32,20 +32,9 @@ class GeometryOptimizer:
     def optimize(
         self,
         input_file: Path,
-        output_file: Path,
+        output_dir: Path,
         fmax: float = 0.1
     ) -> Dict:
-        """
-        Run geometry optimization using MACE + ASE + BFGS
-
-        Args:
-            input_file (Path): path to input .xyz structure
-            output_file (Path): path to save optimized .xyz
-            fmax (float): convergence threshold (eV/Å)
-
-        Returns:
-            Dict: summary of optimization
-        """
         if not input_file.exists():
             logger.error(f"[maceopt] Input file not found: {input_file}")
             raise FileNotFoundError(f"Input file not found: {input_file}")
@@ -61,15 +50,37 @@ class GeometryOptimizer:
         optimizer.run(fmax=fmax)
         logger.info(f"[maceopt] Optimization complete.")
 
-        output_file.parent.mkdir(parents=True, exist_ok=True)
-        write(str(output_file), atoms)
-        logger.info(f"[maceopt] Optimized structure saved to: {output_file}")
+        # 输出路径
+        output_xyz = output_dir / "optimized.xyz"
+        output_extxyz = output_dir / "optimized.extxyz"
+
+        # 写入两个文件：标准xyz与extxyz
+        write(str(output_xyz), atoms, format="xyz")
+        write(str(output_extxyz), atoms, format="extxyz")
+        logger.success(f"Optimized structure written to:\n  ├─ {output_xyz}\n  └─ {output_extxyz}")
+
+        # 提取结构信息
+        energy = atoms.get_potential_energy()
+        free_energy = atoms.info.get("free_energy", energy)
+        stress = atoms.get_stress().tolist()
+        pbc = atoms.get_pbc().tolist()
+
+        properties = {
+            key: f"{arr.dtype.kind.upper()}:{arr.shape[1]}" if arr.ndim == 2 else f"{arr.dtype.kind.upper()}:1"
+            for key, arr in atoms.arrays.items()
+        }
 
         return {
             "success": True,
             "n_atoms": len(atoms),
             "input_file": str(input_file),
-            "output_file": str(output_file),
+            "output_file": str(output_xyz),
+            "output_extxyz": str(output_extxyz),
             "fmax": fmax,
-            "device": self.device
+            "device": self.device,
+            "energy": energy,
+            "free_energy": free_energy,
+            "stress": stress,
+            "pbc": pbc,
+            "properties": properties
         }
