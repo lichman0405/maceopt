@@ -1,5 +1,5 @@
 # 使用官方带 PyTorch 的基础镜像（CPU-only）
-FROM pytorch/pytorch:2.2.2-cpu
+FROM pytorch/pytorch
 
 # 设置工作目录
 WORKDIR /app

@@ -18,10 +18,6 @@ ENV/
 # Logs
 *.log
 
-# Output files
-output/
-*.xyz
-
 # Python packaging
 *.egg
 *.egg-info/
