@@ -1,4 +1,3 @@
-torch
 mace-torch
 ase
 fastapi
