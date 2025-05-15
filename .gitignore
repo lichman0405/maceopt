@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+.maceopt-env/
+
+# macOS and Linux
+.DS_Store
+*.swp
+*~
+
+# Logs
+*.log
+
+# Output files
+output/
+*.xyz
+
+# Python packaging
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VSCode settings
+.vscode/
+
+# Docker
+*.pid
+*.tar
+*.img
