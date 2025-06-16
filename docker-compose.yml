@@ -1,0 +1,13 @@
+services:
+  maceopt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maceopt_service
+    ports:
+      - "4748:8000"
+    volumes:
+      - ./output:/app/output
+    environment:
+      - UVICORN_PORT=8000
+    restart: unless-stopped
