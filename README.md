@@ -1,6 +1,33 @@
-# MACEOPT：基于 MACE 的几何优化 API 服务（更新版）
 
-这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。优化过程基于 MACE（神经力场）和 ASE（结构优化器），支持 `.xyz` 文件上传，优化结构将自动按 session 保存为标准 `.xyz` 和含力场信息的 `.extxyz`，支持下载与结果追踪。
+<div align="center">
+  <a href="https://github.com/lichman0405/maceopt.git">
+    <img src="assets/edit_logo.png" alt="Logo" width="200px">
+  </a>
+
+  <h1 align="center">MACEOPT API Service</h1>
+
+  <p align="center">
+    这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。优化过程基于 MACE（神经力场）和 ASE（结构优化器），支持 `.xyz` 文件上传，优化结构将自动按 session 保存为标准 `.xyz` 和含力场信息的 `.extxyz`，支持下载与结果追踪。
+    <br>
+    <a href="./README-en.md"><strong>English</strong></a>
+    ·
+    <a href="https://github.com/lichman0405/maceopt.git/issues">报告 Bug</a>
+    ·
+    <a href="https://github.com/lichman0405/maceopt.git/issues">提出新特性</a>
+  </p>
+</div>
+
+<div align="center">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker)
+[![GitHub issues](https://img.shields.io/github/issues/lichman0405/maceopt.svg)](https://github.com/lichman0405/maceopt/issues)
+[![GitHub stars](https://img.shields.io/github/stars/lichman0405/maceopt.svg?style=social)](https://github.com/lichman0405/maceopt.git)
+
+</div>
+
 
 ---
 
