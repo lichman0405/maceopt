@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+# The module provides FastAPI endpoints for geometry optimization requests.
 # Author: Shibo Li
 # Date: 2025-05-15
+# Version: 0.2.0
 
-# app/api.py
 
 from fastapi import APIRouter, UploadFile, File, Form, Query, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
@@ -24,10 +24,9 @@ async def optimize_route(
 ):
     logger.rule("[bold blue]API - Optimization Request Received")
 
-    # 解析参数并创建 session
+
     opt_req = parse_optimization_request(structure_file, fmax, device)
 
-    # 实例化优化器并执行优化
     optimizer = GeometryOptimizer(model_path=DEFAULT_MODEL_PATH, device=opt_req.params.device)
     result = optimizer.optimize(
         input_file=opt_req.original_path,
@@ -35,7 +34,6 @@ async def optimize_route(
         fmax=opt_req.params.fmax
     )
 
-    # 构造下载链接（相对路径 → URL）
     session_rel = opt_req.output_dir.relative_to(DEFAULT_OUTPUT_DIR)
     result["session"] = str(session_rel)
     result["download_links"] = {
@@ -51,17 +49,14 @@ async def optimize_route(
 async def download_structure(path: str = Query(..., description="Path relative to output/ directory")):
     logger.rule(f"[bold blue]API - Download Request: {path}")
 
-    # 构造完整路径
     full_path = Path("output") / path
     full_path = full_path.resolve()
 
-    # 安全校验：必须在 output/ 下
     output_root = DEFAULT_OUTPUT_DIR.resolve()
     if not str(full_path).startswith(str(output_root)):
         logger.error("❌ Unsafe path access attempt")
         raise HTTPException(status_code=400, detail="Invalid path.")
 
-    # 文件不存在
     if not full_path.exists():
         logger.error(f"❌ File not found: {full_path}")
         raise HTTPException(status_code=404, detail="File not found.")

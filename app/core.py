@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
+# The module provides a class for geometry optimization using the MACE calculator.
 # Author: Shibo Li
-# Date: 2025-05-15
-
-# app/core.py
+# Date: 2025-06-16
+# Version: 0.2.0
 
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict
 
 from ase.io import read, write
 from ase.optimize import BFGS
@@ -41,6 +40,10 @@ class GeometryOptimizer:
 
         logger.info(f"[maceopt] Reading input structure: {input_file}")
         atoms = read(str(input_file))
+
+        if isinstance(atoms, list):
+            logger.info(f"[maceopt] Multiple structures found, using the first one.")
+            atoms = atoms[0]
         logger.info(f"[maceopt] Number of atoms: {len(atoms)}")
 
         atoms.set_calculator(self.calculator)
@@ -50,16 +53,15 @@ class GeometryOptimizer:
         optimizer.run(fmax=fmax)
         logger.info(f"[maceopt] Optimization complete.")
 
-        # 输出路径
+
         output_xyz = output_dir / "optimized.xyz"
         output_extxyz = output_dir / "optimized.extxyz"
 
-        # 写入两个文件：标准xyz与extxyz
+
         write(str(output_xyz), atoms, format="xyz")
         write(str(output_extxyz), atoms, format="extxyz")
         logger.success(f"Optimized structure written to:\n  ├─ {output_xyz}\n  └─ {output_extxyz}")
 
-        # 提取结构信息
         energy = atoms.get_potential_energy()
         free_energy = atoms.info.get("free_energy", energy)
         stress = atoms.get_stress().tolist()

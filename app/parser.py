@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+# The module provides a parser for geometry optimization requests.
 # Author: Shibo Li
 # Date: 2025-05-15
-
-# app/parser.py
+# Version: 0.2.0
 
 import uuid
 from pathlib import Path
@@ -33,27 +32,27 @@ def parse_optimization_request(
     device: str = Form("cpu")
 ) -> OptimizationRequest:
     filename = structure_file.filename
+    if filename is None:
+        raise HTTPException(status_code=400, detail="Uploaded file must have a filename")
     suffix = Path(filename).suffix.lower()
 
     logger.rule("[bold blue]Parsing structure upload")
-    logger.print(f"[cyan]- Uploaded file:[/] {filename}")
+    logger.info(f"[cyan]- Uploaded file:[/] {filename}")
 
     if suffix != ".xyz":
         raise HTTPException(status_code=400, detail="Only .xyz files are supported")
 
-    # 创建 session ID 和输出目录
     session_id = f"session_{uuid.uuid4().hex[:8]}"
     output_dir = DEFAULT_OUTPUT_DIR / session_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # 保存上传结构为 original.xyz
     original_path = output_dir / "original.xyz"
     with original_path.open("wb") as f:
         content = structure_file.file.read()
         f.write(content)
 
-    logger.print(f"[green]- Saved to:[/] {original_path}")
-    logger.print(f"[magenta]- Session:[/] {session_id}")
+    logger.info(f"[green]- Saved to:[/] {original_path}")
+    logger.info(f"[magenta]- Session:[/] {session_id}")
 
     return OptimizationRequest(
         original_path=original_path,
