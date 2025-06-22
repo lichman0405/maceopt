@@ -38,7 +38,7 @@ async def optimize_route(
     result["session"] = str(session_rel)
     result["download_links"] = {
         "cif": f"/download?path={session_rel}/optimized.cif",
-        "extcif": f"/download?path={session_rel}/optimized.extcif"
+        "extxyz": f"/download?path={session_rel}/optimized.extxyz"
     }
 
     logger.success("Optimization complete. Returning full metadata.")

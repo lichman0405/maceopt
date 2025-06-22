@@ -55,12 +55,12 @@ class GeometryOptimizer:
 
 
         output_cif = output_dir / "optimized.cif"
-        output_extcif = output_dir / "optimized.extcif"
+        output_extxyz = output_dir / "optimized.extxyz"
 
 
         write(str(output_cif), atoms, format="cif")
-        write(str(output_extcif), atoms, format="extcif")
-        logger.success(f"Optimized structure written to:\n  ├─ {output_cif}\n  └─ {output_extcif}")
+        write(str(output_extxyz), atoms, format="extxyz")
+        logger.success(f"Optimized structure written to:\n  ├─ {output_cif}\n  └─ {output_extxyz}")
 
         energy = atoms.get_potential_energy()
         free_energy = atoms.info.get("free_energy", energy)
@@ -77,7 +77,7 @@ class GeometryOptimizer:
             "n_atoms": len(atoms),
             "input_file": str(input_file),
             "output_file": str(output_cif),
-            "output_extcif": str(output_extcif),
+            "output_extxyz": str(output_extxyz),
             "fmax": fmax,
             "device": self.device,
             "energy": energy,
