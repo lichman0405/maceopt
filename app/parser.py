@@ -39,14 +39,11 @@ def parse_optimization_request(
     logger.rule("[bold blue]Parsing structure upload")
     logger.info(f"[cyan]- Uploaded file:[/] {filename}")
 
-    if suffix != ".xyz":
-        raise HTTPException(status_code=400, detail="Only .xyz files are supported")
-
     session_id = f"session_{uuid.uuid4().hex[:8]}"
     output_dir = DEFAULT_OUTPUT_DIR / session_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    original_path = output_dir / "original.xyz"
+    original_path = output_dir / "original.cif"
     with original_path.open("wb") as f:
         content = structure_file.file.read()
         f.write(content)
