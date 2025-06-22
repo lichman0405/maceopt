@@ -7,7 +7,7 @@
   <h1 align="center">MACEOPT API Service</h1>
 
   <p align="center">
-    This is a lightweight FastAPI service for geometry optimization of atomic structures (such as MOFs, molecules, materials). It combines the MACE neural force field with the ASE optimizer and supports uploading <code>.cif</code> structure files. The results of each optimization task are automatically saved per session and provide both the optimized <code>.cif</code> (standard structure) and <code>.extcif</code> (containing energy, forces, stress, etc.) files, with download and tracking supported.
+    This is a lightweight FastAPI service for geometry optimization of atomic structures (such as MOFs, molecules, materials). It combines the MACE neural force field with the ASE optimizer and supports uploading <code>.cif</code> structure files. The results of each optimization task are automatically saved per session and provide both the optimized <code>.cif</code> (standard structure) and <code>.extxyz</code> (containing energy, forces, stress, etc.) files, with download and tracking supported.
     <br>
     <a href="README.md"><strong>中文</strong></a>
     ·
@@ -37,7 +37,7 @@
 - Automatically creates a separate session directory for each optimization task
 - Optimization output includes:
   - `optimized.cif` (standard structure file)
-  - `optimized.extcif` (with additional physical data: energy, forces, stress, etc.)
+  - `optimized.extxyz` (with additional physical data: energy, forces, stress, etc.)
 - Returns complete physical quantities (energy, stress, periodic boundary conditions, forces, etc.)
 - Rich terminal logging (powered by `rich`)
 - Supports one-click deployment with Docker
@@ -87,9 +87,9 @@ This endpoint accepts a structure file and performs geometry optimization using 
   "session_id": "string",
   "message": "Optimization successful",
   "optimized_structure_cif": "string",
-  "optimized_structure_extcif": "string",
+  "optimized_structure_extxyz": "string",
   "download_link_cif": "/download/{session_id}/optimized.cif",
-  "download_link_extcif": "/download/{session_id}/optimized.extcif",
+  "download_link_extxyz": "/download/{session_id}/optimized.extxyz",
   "log_output": "string"
 }
 ```
@@ -97,9 +97,9 @@ This endpoint accepts a structure file and performs geometry optimization using 
 - **`session_id`**: Unique ID for the optimization task.
 - **`message`**: Status message.
 - **`optimized_structure_cif`**: Content of the optimized `.cif` file.
-- **`optimized_structure_extcif`**: Content of the optimized `.extcif` file with extra physical data.
+- **`optimized_structure_extxyz`**: Content of the optimized `.extxyz` file with extra physical data.
 - **`download_link_cif`**: Direct link to download the `.cif` file.
-- **`download_link_extcif`**: Direct link to download the `.extcif` file.
+- **`download_link_extxyz`**: Direct link to download the `.extxyz` file.
 - **`log_output`**: Detailed log of the optimization process.
 
 ---

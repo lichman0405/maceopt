@@ -6,7 +6,7 @@
   <h1 align="center">MACEOPT API 服务</h1>
 
   <p align="center">
-    这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。该服务结合了 MACE 神经力场与 ASE 优化器，支持上传<code>.cif</code> 结构文件。优化任务的结果将按会话（session）自动保存，并提供优化后的 <code>.cif</code>（标准结构）和 <code>.extcif</code>（含能量、力、应力等信息）文件，支持下载与结果追踪。
+    这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。该服务结合了 MACE 神经力场与 ASE 优化器，支持上传<code>.cif</code> 结构文件。优化任务的结果将按会话（session）自动保存，并提供优化后的 <code>.cif</code>（标准结构）和 <code>.extxyz</code>（含能量、力、应力等信息）文件，支持下载与结果追踪。
     <br>
     <a href="README-en.md"><strong>English</strong></a>
     ·
@@ -37,7 +37,7 @@
 - 自动为每个优化任务创建独立的会话（session）目录
 - 优化输出包含：
   - `optimized.cif`（标准结构文件）
-  - `optimized.extcif`（包含能量、受力、应力等附加物理数据）
+  - `optimized.extxyz`（包含能量、受力、应力等附加物理数据）
 - 返回完整的物理量（如能量、应力、周期性边界条件、力等）
 - 丰富的终端日志输出（基于 rich）
 - 支持 Docker 一键部署
@@ -87,9 +87,9 @@ uvicorn app.main:app --reload --port 4748
   "session_id": "string",
   "message": "Optimization successful",
   "optimized_structure_cif": "string",
-  "optimized_structure_extcif": "string",
+  "optimized_structure_extxyz": "string",
   "download_link_cif": "/download/{session_id}/optimized.cif",
-  "download_link_extcif": "/download/{session_id}/optimized.extcif",
+  "download_link_extxyz": "/download/{session_id}/optimized.extxyz",
   "log_output": "string"
 }
 ```
@@ -97,9 +97,9 @@ uvicorn app.main:app --reload --port 4748
 - **`session_id`**: 优化任务的唯一标识符。
 - **`message`**: 表示结果的状态消息。
 - **`optimized_structure_cif`**: 优化后结构的 `.cif` 格式文件内容。
-- **`optimized_structure_extcif`**: 优化后结构的 `.extcif` 格式文件内容，包含额外的物理数据。
+- **`optimized_structure_extxyz`**: 优化后结构的 `.extxyz` 格式文件内容，包含额外的物理数据。
 - **`download_link_cif`**: 用于下载 `.cif` 文件的直接链接。
-- **`download_link_extcif`**: 用于下载 `.extcif` 文件的直接链接。
+- **`download_link_extxyz`**: 用于下载 `.extxyz` 文件的直接链接。
 - **`log_output`**: 优化过程中的详细日志。
 
 ---
