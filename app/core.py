@@ -54,13 +54,13 @@ class GeometryOptimizer:
         logger.info(f"[maceopt] Optimization complete.")
 
 
-        output_xyz = output_dir / "optimized.xyz"
-        output_extxyz = output_dir / "optimized.extxyz"
+        output_cif = output_dir / "optimized.cif"
+        output_extcif = output_dir / "optimized.extcif"
 
 
-        write(str(output_xyz), atoms, format="xyz")
-        write(str(output_extxyz), atoms, format="extxyz")
-        logger.success(f"Optimized structure written to:\n  ├─ {output_xyz}\n  └─ {output_extxyz}")
+        write(str(output_cif), atoms, format="cif")
+        write(str(output_extcif), atoms, format="extcif")
+        logger.success(f"Optimized structure written to:\n  ├─ {output_cif}\n  └─ {output_extcif}")
 
         energy = atoms.get_potential_energy()
         free_energy = atoms.info.get("free_energy", energy)
@@ -76,8 +76,8 @@ class GeometryOptimizer:
             "success": True,
             "n_atoms": len(atoms),
             "input_file": str(input_file),
-            "output_file": str(output_xyz),
-            "output_extxyz": str(output_extxyz),
+            "output_file": str(output_cif),
+            "output_extcif": str(output_extcif),
             "fmax": fmax,
             "device": self.device,
             "energy": energy,
