@@ -1,15 +1,14 @@
-
 <div align="center">
   <a href="https://github.com/lichman0405/maceopt.git">
     <img src="assets/edit_logo.png" alt="Logo" width="200px">
   </a>
 
-  <h1 align="center">MACEOPT API Service</h1>
+  <h1 align="center">MACEOPT API 服务</h1>
 
   <p align="center">
-    这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。优化过程基于 MACE（神经力场）和 ASE（结构优化器），支持 `.xyz` 文件上传，优化结构将自动按 session 保存为标准 `.xyz` 和含力场信息的 `.extxyz`，支持下载与结果追踪。
+    这是一个轻量级的 FastAPI 服务，用于对原子结构（如 MOF、分子、材料）进行几何优化。该服务结合了 MACE 神经力场与 ASE 优化器，支持上传<code>.cif</code> 结构文件。优化任务的结果将按会话（session）自动保存，并提供优化后的 <code>.cif</code>（标准结构）和 <code>.extcif</code>（含能量、力、应力等信息）文件，支持下载与结果追踪。
     <br>
-    <a href="./README-en.md"><strong>English</strong></a>
+    <a href="README-en.md"><strong>English</strong></a>
     ·
     <a href="https://github.com/lichman0405/maceopt.git/issues">报告 Bug</a>
     ·
@@ -33,14 +32,14 @@
 
 ## 🚀 功能特点
 
-- 支持 `.xyz` 结构文件上传
+- 支持上传结构文件 (`.cif`)
 - 使用 MACE-MP-0 力场 + ASE BFGS 优化算法
-- 自动创建独立 session 目录保存优化任务
+- 自动为每个优化任务创建独立的会话（session）目录
 - 优化输出包含：
-  - `optimized.xyz`（标准结构）
-  - `optimized.extxyz`（附带能量、受力、应力等信息）
-- 返回完整结构物理字段（如 energy、stress、pbc、forces 等）
-- 丰富终端日志输出（基于 rich）
+  - `optimized.cif`（标准结构文件）
+  - `optimized.extcif`（包含能量、受力、应力等附加物理数据）
+- 返回完整的物理量（如能量、应力、周期性边界条件、力等）
+- 丰富的终端日志输出（基于 rich）
 - 支持 Docker 一键部署
 
 ---
@@ -48,7 +47,7 @@
 ## 📦 安装步骤
 
 ```bash
-git clone https://github.com/your-org/maceopt.git
+git clone https://github.com/lichman0405/maceopt.git
 cd maceopt
 pip install -r requirements.txt
 ```
@@ -67,49 +66,41 @@ uvicorn app.main:app --reload --port 4748
 
 ## 🔁 API 接口说明
 
-### ✅ POST `/optimize` - 结构优化接口
+### ✅ POST `/optimize`
 
-| 参数名          | 类型     | 是否必填 | 示例         |
-|------------------|----------|----------|--------------|
-| structure_file   | 文件     | ✅       | `test.xyz`   |
-| fmax             | float    | ❌       | `0.1`        |
-| device           | string   | ❌       | `cpu`        |
+此接口接收一个结构文件，并使用 MACE 力场对其进行几何优化。
 
-**返回示例（节选）：**
+**请求体 (Request Body):**
+
+| 参数 | 类型 | 是否必须 | 默认值 | 描述 |
+| :--- | :--- | :--- | :--- | :--- |
+| `structure_file` | file | ✅ | - | 待优化的结构文件 (`.cif`)。 |
+| `fmax` | float | ❌ | `0.1` | 优化的收敛阈值，表示任何原子上的最大力。 |
+| `steps` | int | ❌ | `100` | 最大优化步数。 |
+| `optimizer_name` | string | ❌ | `BFGS` | 用于计算的 ASE 优化器名称。 |
+| `device` | string | ❌ | `cpu` | 运行 MACE 模型的设备 (`cpu` 或 `cuda`)。 |
+
+**响应体 (Response Body, 成功时):**
 
 ```json
 {
-  "success": true,
-  "n_atoms": 3,
-  "input_file": "/tmp/tmpabc.xyz",
-  "output_file": "output/session_8f2d4b1a/optimized.xyz",
-  "output_extxyz": "output/session_8f2d4b1a/optimized.extxyz",
-  "energy": -14.26,
-  "free_energy": -14.26,
-  "stress": [...],
-  "pbc": [false, false, false],
-  "properties": {
-    "species": "S:1",
-    "pos": "R:3",
-    "forces": "R:3"
-  },
-  "download_links": {
-    "xyz": "/download?path=session_8f2d4b1a/optimized.xyz",
-    "extxyz": "/download?path=session_8f2d4b1a/optimized.extxyz"
-  }
+  "session_id": "string",
+  "message": "Optimization successful",
+  "optimized_structure_cif": "string",
+  "optimized_structure_extcif": "string",
+  "download_link_cif": "/download/{session_id}/optimized.cif",
+  "download_link_extcif": "/download/{session_id}/optimized.extcif",
+  "log_output": "string"
 }
 ```
 
----
-
-### ⬇️ GET `/download?path=...` - 下载优化结果
-
-使用 `download_links` 字段提供的路径进行结构文件下载：
-
-```bash
-curl -O "http://localhost:4748/download?path=session_8f2d4b1a/optimized.xyz"
-curl -O "http://localhost:4748/download?path=session_8f2d4b1a/optimized.extxyz"
-```
+- **`session_id`**: 优化任务的唯一标识符。
+- **`message`**: 表示结果的状态消息。
+- **`optimized_structure_cif`**: 优化后结构的 `.cif` 格式文件内容。
+- **`optimized_structure_extcif`**: 优化后结构的 `.extcif` 格式文件内容，包含额外的物理数据。
+- **`download_link_cif`**: 用于下载 `.cif` 文件的直接链接。
+- **`download_link_extcif`**: 用于下载 `.extcif` 文件的直接链接。
+- **`log_output`**: 优化过程中的详细日志。
 
 ---
 
@@ -137,14 +128,14 @@ docker run -it --rm -p 4748:8000 maceopt
 maceopt/
 ├── app/
 │   ├── main.py          # FastAPI 启动入口
-│   ├── api.py           # 接口定义 + 路由绑定
-│   ├── parser.py        # 参数解析 + session 路径构造
-│   ├── core.py          # 核心优化逻辑（MACE + ASE）
-│   ├── utils.py         # rich 日志封装
-│   └── config.py        # 默认模型/路径配置
+│   ├── api.py           # 接口定义与路由
+│   ├── parser.py        # 参数解析与会话路径构造
+│   ├── core.py          # 核心优化逻辑 (MACE + ASE)
+│   ├── utils.py         # rich 日志工具
+│   └── config.py        # 默认模型与路径配置
 ├── models/              # 存放 MACE 训练模型
 ├── examples/            # 示例输入结构
-├── output/              # 自动生成优化 session 目录
+├── output/              # 自动生成的优化会话目录
 ├── requirements.txt
 ├── Dockerfile
 └── README.md
