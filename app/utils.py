@@ -1,10 +1,12 @@
 # The module provides a singleton class ConsoleManager that manages a Rich Console instance
 # Author: Shibo Li
-# Date: 2025-06-16
-# Version: 0.2.0
+# Date: 2025-12-22
+# Version: 0.3.1
 
 
 import logging
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
 from rich.logging import RichHandler
 from rich.console import Console
 from rich.panel import Panel
@@ -70,21 +72,60 @@ class ConsoleManager:
         self._initialized = True
 
     def _setup_logger(self) -> logging.Logger:
-        logger = logging.getLogger("maceopt-api") # Changed to maceopt-api
+        logger = logging.getLogger("maceopt-api")
         
         if logger.hasHandlers():
             return logger
 
-        logger.setLevel(logging.INFO)
-        handler = RichHandler(
+        # Import here to avoid circular dependency
+        from app.config import settings
+        
+        # Set log level from config
+        log_level = getattr(logging, settings.log_level.upper(), logging.INFO)
+        logger.setLevel(log_level)
+        
+        # Console handler (Rich)
+        console_handler = RichHandler(
             console=self._console,
             rich_tracebacks=True,
-            tracebacks_show_locals=False, # For debug when deploying.
+            tracebacks_show_locals=False,
             keywords=["INFO", "SUCCESS", "WARNING", "ERROR", "DEBUG", "CRITICAL"],
             show_path=False 
         )
-        handler.setFormatter(logging.Formatter(fmt="%(message)s", datefmt="[%X]"))
-        logger.addHandler(handler)
+        console_handler.setFormatter(logging.Formatter(fmt="%(message)s", datefmt="[%X]"))
+        logger.addHandler(console_handler)
+        
+        # File handler (Rotating)
+        # Ensure log directory exists
+        settings.log_dir.mkdir(parents=True, exist_ok=True)
+        
+        log_file = settings.log_dir / "app.log"
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=settings.log_max_bytes,
+            backupCount=settings.log_backup_count,
+            encoding='utf-8'
+        )
+        file_handler.setLevel(log_level)
+        file_formatter = logging.Formatter(
+            fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
+        
+        # Error file handler (only errors and above)
+        error_log_file = settings.log_dir / "error.log"
+        error_handler = RotatingFileHandler(
+            error_log_file,
+            maxBytes=settings.log_max_bytes,
+            backupCount=settings.log_backup_count,
+            encoding='utf-8'
+        )
+        error_handler.setLevel(logging.ERROR)
+        error_handler.setFormatter(file_formatter)
+        logger.addHandler(error_handler)
+        
         return logger
 
 

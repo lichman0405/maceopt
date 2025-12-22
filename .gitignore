@@ -17,6 +17,7 @@ ENV/
 
 # Logs
 *.log
+logs/
 
 # Python packaging
 *.egg

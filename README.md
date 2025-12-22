@@ -33,7 +33,7 @@
 
 ## 🚀 功能特点
 
-- ✅ 支持 `.xyz` 结构文件上传
+- ✅ **多格式支持**：`.xyz`, `.cif`, `.vasp`, `.poscar`, `.contcar`
 - ✅ 使用 MACE-MP-0 力场 + ASE BFGS 优化算法
 - ✅ **自动GPU检测**（CUDA/MPS/CPU智能切换）
 - ✅ 自动创建独立 session 目录保存优化任务
@@ -41,11 +41,14 @@
   - `optimized.xyz`（标准结构）
   - `optimized.extxyz`（附带能量、受力、应力等信息）
 - ✅ 返回完整结构物理字段（如 energy、stress、pbc、forces 等）
+- ✅ **持久化日志**：文件日志轮转（app.log + error.log）
+- ✅ **标准化错误码**：MACE_xxx 错误码系统，API响应更专业
+- ✅ **类型安全配置**：基于 Pydantic Settings 的配置管理
+- ✅ **结构大小验证**：防止过大结构导致资源耗尽
 - ✅ 丰富终端日志输出（基于 rich）
 - ✅ 支持 Docker 一键部署
 - ✅ 环境变量配置支持
 - ✅ 健康检查端点
-- ✅ 文件大小验证
 - ✅ 完善的异常处理
 - ✅ 生产级 Gunicorn 部署
 
@@ -116,7 +119,7 @@ curl http://localhost:4748/info
 {
   "status": "healthy",
   "service": "maceopt",
-  "version": "0.3.0"
+  "version": "0.3.1"
 }
 ```
 
@@ -128,11 +131,11 @@ curl http://localhost:4748/info
 ```json
 {
   "service": "MACEOPT Geometry Optimization API",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "model_path": "models/mace_agnesi_medium.model",
   "device": "CUDA",
   "max_upload_size_mb": 50,
-  "supported_formats": [".xyz"],
+  "supported_formats": [".xyz", ".cif", ".vasp", ".poscar", ".contcar"],
   "gpu_info": {
     "name": "NVIDIA GeForce RTX 4090",
     "memory_total_gb": 24.0,
@@ -270,11 +273,13 @@ maceopt/
 │   ├── api.py           # 接口定义 + 路由绑定
 │   ├── parser.py        # 参数解析 + session 路径构造
 │   ├── core.py          # 核心优化逻辑（MACE + ASE + GPU检测）
-│   ├── utils.py         # rich 日志封装
-│   └── config.py        # 默认模型/路径配置 + 环境变量
+│   ├── utils.py         # rich 日志封装 + 文件日志
+│   ├── config.py        # Pydantic Settings 配置管理
+│   └── errors.py        # 错误码定义 + 自定义异常
 ├── models/              # 存放 MACE 训练模型
 ├── examples/            # 示例输入结构
 ├── output/              # 自动生成优化 session 目录
+├── logs/                # 日志文件目录（app.log + error.log）
 ├── .env.example         # 环境变量配置模板
 ├── requirements.txt     # Python 依赖
 ├── Dockerfile           # Docker 镜像定义
@@ -297,6 +302,12 @@ maceopt/
 | `WORKERS` | `4` | Gunicorn worker进程数 |
 | `UVICORN_PORT` | `4748` | 服务端口 |
 | `LOG_LEVEL` | `INFO` | 日志级别 |
+| `LOG_DIR` | `logs` | 日志目录 |
+| `LOG_MAX_BYTES` | `10485760` | 单个日志文件最大大小（10MB） |
+| `LOG_BACKUP_COUNT` | `5` | 日志备份文件数量 |
+| `MAX_ATOMS_WARNING` | `1000` | 结构原子数警告阈值 |
+| `MAX_ATOMS_LIMIT` | `10000` | 结构原子数硬限制 |
+| `SUPPORTED_FORMATS` | `.xyz,.cif,.vasp,.poscar,.contcar` | 支持的文件格式 |
 
 ---
 
@@ -325,7 +336,9 @@ curl http://localhost:4748/info
 
 - ✅ 文件大小限制（默认50MB）
 - ✅ 路径遍历保护
-- ✅ 文件类型验证（仅支持.xyz）
+- ✅ 文件类型验证（支持.xyz/.cif/.vasp/.poscar/.contcar）
+- ✅ 结构大小验证（防止过大结构）
+- ✅ 标准化错误码（MACE_xxx）
 - ✅ 完整的异常处理
 - ✅ 健康检查端点
 

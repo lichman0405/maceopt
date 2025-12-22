@@ -36,7 +36,7 @@ It combines the MACE neural force field with the ASE optimizer. You can upload `
 
 ## ✨ Features
 
-- ✅ Upload `.xyz` structure files
+- ✅ **Multi-format support**: `.xyz`, `.cif`, `.vasp`, `.poscar`, `.contcar`
 - ✅ Uses MACE-MP-0 force field + ASE BFGS optimizer
 - ✅ **Automatic GPU Detection** (CUDA/MPS/CPU smart switching)
 - ✅ Automatically creates session directories for each task
@@ -44,11 +44,14 @@ It combines the MACE neural force field with the ASE optimizer. You can upload `
   - `optimized.xyz` (standard structure)
   - `optimized.extxyz` (includes energy, forces, stress, etc.)
 - ✅ Returns complete physical quantities (energy, stress, PBC, forces, etc.)
+- ✅ **Persistent logging**: Rotating file logs (app.log + error.log)
+- ✅ **Standardized error codes**: MACE_xxx error code system for professional API responses
+- ✅ **Type-safe configuration**: Pydantic Settings-based configuration management
+- ✅ **Structure size validation**: Prevents resource exhaustion from oversized structures
 - ✅ Rich terminal logs (using rich)
 - ✅ One-click Docker deployment
 - ✅ Environment variable configuration support
 - ✅ Health check endpoints
-- ✅ File size validation
 - ✅ Comprehensive exception handling
 - ✅ Production-ready Gunicorn deployment
 
@@ -115,7 +118,7 @@ Returns service health status for monitoring and load balancers.
 {
   "status": "healthy",
   "service": "maceopt",
-  "version": "0.3.0"
+  "version": "0.3.1"
 }
 ```
 
@@ -127,11 +130,11 @@ Returns server configuration including GPU detection results.
 ```json
 {
   "service": "MACEOPT Geometry Optimization API",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "model_path": "models/mace_agnesi_medium.model",
   "device": "CUDA",
   "max_upload_size_mb": 50,
-  "supported_formats": [".xyz"],
+  "supported_formats": [".xyz", ".cif", ".vasp", ".poscar", ".contcar"],
   "gpu_info": {
     "name": "NVIDIA GeForce RTX 4090",
     "memory_total_gb": 24.0,
@@ -260,11 +263,13 @@ maceopt/
 │   ├── api.py           # API routes and endpoints
 │   ├── parser.py        # Request parsing + session path construction
 │   ├── core.py          # Core optimization logic (MACE + ASE + GPU detection)
-│   ├── utils.py         # Rich logging wrapper
-│   └── config.py        # Configuration + environment variables
+│   ├── utils.py         # Rich logging wrapper + file logging
+│   ├── config.py        # Pydantic Settings configuration management
+│   └── errors.py        # Error code definitions + custom exceptions
 ├── models/              # MACE trained models
 ├── examples/            # Example input structures
 ├── output/              # Auto-generated optimization session directories
+├── logs/                # Log files directory (app.log + error.log)
 ├── .env.example         # Environment variable template
 ├── requirements.txt     # Python dependencies
 ├── Dockerfile           # Docker image definition
@@ -287,6 +292,12 @@ All configuration options can be set via environment variables (`.env` file):
 | `WORKERS` | `4` | Gunicorn worker processes |
 | `UVICORN_PORT` | `4748` | Service port |
 | `LOG_LEVEL` | `INFO` | Logging level |
+| `LOG_DIR` | `logs` | Log directory |
+| `LOG_MAX_BYTES` | `10485760` | Maximum log file size (10MB) |
+| `LOG_BACKUP_COUNT` | `5` | Number of log backup files |
+| `MAX_ATOMS_WARNING` | `1000` | Warning threshold for structure size |
+| `MAX_ATOMS_LIMIT` | `10000` | Hard limit for structure size |
+| `SUPPORTED_FORMATS` | `.xyz,.cif,.vasp,.poscar,.contcar` | Supported file formats |
 
 ---
 
@@ -313,7 +324,9 @@ curl http://localhost:4748/info
 
 - ✅ File size limit (default 50MB)
 - ✅ Path traversal protection
-- ✅ File type validation (only .xyz)
+- ✅ File type validation (.xyz/.cif/.vasp/.poscar/.contcar)
+- ✅ Structure size validation (prevents oversized structures)
+- ✅ Standardized error codes (MACE_xxx)
 - ✅ Comprehensive exception handling
 - ✅ Health check endpoints
 
