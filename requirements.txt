@@ -5,3 +5,5 @@ uvicorn
 pydantic
 python-multipart
 rich
+python-dotenv
+gunicorn
