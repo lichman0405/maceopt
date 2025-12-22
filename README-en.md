@@ -177,6 +177,41 @@ curl -O "http://localhost:4748/download?path=session_xxx/optimized.xyz"
 curl -O "http://localhost:4748/download?path=session_xxx/optimized.extxyz"
 ```
 
+---
+
+## 🧪 Quick Testing
+
+### Basic Test Workflow
+
+```bash
+# 1. Start service
+uvicorn app.main:app --reload --port 4748
+
+# 2. Health check (new terminal)
+curl http://localhost:4748/health
+
+# 3. Check GPU info
+curl http://localhost:4748/info
+
+# 4. Test optimization
+curl -X POST http://localhost:4748/optimize \
+  -F "structure_file=@examples/h2o.xyz" \
+  -F "fmax=0.1" \
+  -F "device=auto"
+
+# 5. Open Swagger UI in browser
+# http://localhost:4748/docs
+```
+
+### Expected Results
+
+- ✅ `/health` returns `{"status": "healthy"}`
+- ✅ `/info` shows device type (CUDA/CPU)
+- ✅ `/optimize` returns optimization results with download links
+- ✅ Session folder generated in `output/` directory
+
+---
+
 ## 🐳 Docker Deployment
 
 ### Using Docker Compose (Recommended)

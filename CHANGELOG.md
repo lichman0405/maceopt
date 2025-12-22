@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - **完善的异常处理**: 所有错误都有明确的HTTP状态码和错误信息
 - **Gunicorn支持**: 生产环境推荐使用多进程部署
 - **Docker健康检查**: Docker容器内置健康检查
+- **快速测试章节**: 在README中添加简洁的测试流程
 
 ### 🔧 Changed
 - 更新API版本至 v0.3.0
@@ -22,10 +23,11 @@ All notable changes to this project will be documented in this file.
 - 增强日志输出，显示GPU检测信息
 
 ### 📝 Documentation
-- 更新README.md，添加GPU使用说明
+- 更新README.md和README-en.md，添加GPU使用说明
 - 添加`.env.example`配置模板
 - 添加配置说明和安全特性文档
-- 添加生产部署建议
+- 简化文档结构，移除冗余的QUICKSTART和TESTING文档
+- 在README中集成简洁的测试示例
 
 ### 🛡️ Security
 - 添加文件大小限制

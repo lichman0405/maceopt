@@ -187,6 +187,39 @@ curl -O "http://localhost:4748/download?path=session_8f2d4b1a/optimized.extxyz"
 
 ---
 
+## 🧪 快速测试
+
+### 基础测试流程
+
+```bash
+# 1. 启动服务
+uvicorn app.main:app --reload --port 4748
+
+# 2. 健康检查（新窗口）
+curl http://localhost:4748/health
+
+# 3. 查看GPU信息
+curl http://localhost:4748/info
+
+# 4. 测试优化
+curl -X POST http://localhost:4748/optimize \
+  -F "structure_file=@examples/h2o.xyz" \
+  -F "fmax=0.1" \
+  -F "device=auto"
+
+# 5. 浏览器访问 Swagger UI
+# http://localhost:4748/docs
+```
+
+### 预期结果
+
+- ✅ `/health` 返回 `{"status": "healthy"}`
+- ✅ `/info` 显示设备类型（CUDA/CPU）
+- ✅ `/optimize` 返回优化结果和下载链接
+- ✅ `output/` 目录下生成 session 文件夹
+
+---
+
 ## 🐳 Docker 容器部署
 
 ### 使用 Docker Compose（推荐）
