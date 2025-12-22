@@ -36,41 +36,117 @@ It combines the MACE neural force field with the ASE optimizer. You can upload `
 
 ## ✨ Features
 
-- Upload `.xyz` structure files
-- Uses MACE-MP-0 force field + ASE BFGS optimizer
-- Automatically creates session directories for each task
-- Outputs include:
+- ✅ Upload `.xyz` structure files
+- ✅ Uses MACE-MP-0 force field + ASE BFGS optimizer
+- ✅ **Automatic GPU Detection** (CUDA/MPS/CPU smart switching)
+- ✅ Automatically creates session directories for each task
+- ✅ Outputs include:
   - `optimized.xyz` (standard structure)
   - `optimized.extxyz` (includes energy, forces, stress, etc.)
-- Returns complete physical quantities (energy, stress, PBC, forces, etc.)
-- Rich terminal logs (using rich)
-- One-click Docker deployment
+- ✅ Returns complete physical quantities (energy, stress, PBC, forces, etc.)
+- ✅ Rich terminal logs (using rich)
+- ✅ One-click Docker deployment
+- ✅ Environment variable configuration support
+- ✅ Health check endpoints
+- ✅ File size validation
+- ✅ Comprehensive exception handling
+- ✅ Production-ready Gunicorn deployment
 
 ## ⚙️ Installation
 
 ```bash
-git clone https://github.com/your-org/maceopt.git
+git clone https://github.com/lichman0405/maceopt.git
 cd maceopt
 pip install -r requirements.txt
 ```
 
+### Environment Configuration (Optional)
+
+```bash
+# Copy configuration template
+cp .env.example .env
+
+# Edit .env file to customize settings
+# DEVICE=auto          # auto/cpu/cuda/mps - automatic GPU detection
+# MAX_UPLOAD_SIZE_MB=50
+# WORKERS=4
+```
+
+---
+
 ## 🚀 Run Locally
+
+### Development Mode (Single Process)
 
 ```bash
 uvicorn app.main:app --reload --port 4748
 ```
 
+### Production Mode (Multi-Process, Recommended)
+
+```bash
+gunicorn app.main:app \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:4748 \
+  --timeout 300
+```
+
 Open [http://localhost:4748/docs](http://localhost:4748/docs) to access the Swagger UI.
+
+### Health Check
+
+```bash
+# Check service status
+curl http://localhost:4748/health
+
+# Get server information (including GPU info)
+curl http://localhost:4748/info
+```
 
 ## 📡 API Endpoints
 
-### ✅ POST `/optimize`
+### ✅ GET `/health` - Health Check
 
-| Parameter       | Type   | Required | Example     |
-|-----------------|--------|----------|-------------|
-| structure_file  | file   | ✅        | `test.xyz`  |
-| fmax            | float  | ❌        | `0.1`       |
-| device          | string | ❌        | `cpu`       |
+Returns service health status for monitoring and load balancers.
+
+**Sample Response:**
+```json
+{
+  "status": "healthy",
+  "service": "maceopt",
+  "version": "0.3.0"
+}
+```
+
+### ✅ GET `/info` - Server Information
+
+Returns server configuration including GPU detection results.
+
+**Sample Response:**
+```json
+{
+  "service": "MACEOPT Geometry Optimization API",
+  "version": "0.3.0",
+  "model_path": "models/mace_agnesi_medium.model",
+  "device": "CUDA",
+  "max_upload_size_mb": 50,
+  "supported_formats": [".xyz"],
+  "gpu_info": {
+    "name": "NVIDIA GeForce RTX 4090",
+    "memory_total_gb": 24.0,
+    "cuda_version": "12.1"
+  }
+}
+```
+
+### ✅ POST `/optimize` - Structure Optimization
+
+| Parameter       | Type   | Required | Example     | Description |
+|-----------------|--------|----------|-------------|-------------|
+| structure_file  | file   | ✅        | `test.xyz`  | Atomic structure file |
+| fmax            | float  | ❌        | `0.1`       | Convergence threshold (eV/Å) |
+| device          | string | ❌        | `auto`      | `auto`/`cpu`/`cuda`/`mps` |
 
 **Sample Response:**
 
@@ -103,16 +179,39 @@ curl -O "http://localhost:4748/download?path=session_xxx/optimized.extxyz"
 
 ## 🐳 Docker Deployment
 
-### Build the Image
+### Using Docker Compose (Recommended)
+
+```bash
+# Start service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop service
+docker-compose down
+```
+
+### Manual Build
 
 ```bash
 docker build -t maceopt .
 ```
 
-### Run the Container
+### Run Container
 
+**CPU Version:**
 ```bash
-docker run -it --rm -p 4748:8000 maceopt
+docker run -it --rm -p 4748:8000 -v $(pwd)/output:/app/output maceopt
+```
+
+**GPU Version (requires nvidia-docker):**
+```bash
+docker run -it --rm --gpus all \
+  -p 4748:8000 \
+  -v $(pwd)/output:/app/output \
+  -e DEVICE=auto \
+  maceopt
 ```
 
 Access [http://localhost:4748/docs](http://localhost:4748/docs)
@@ -121,14 +220,69 @@ Access [http://localhost:4748/docs](http://localhost:4748/docs)
 
 ```
 maceopt/
-├── app/               # FastAPI app and core logic
-├── models/            # MACE trained models
-├── examples/          # Example input structures
-├── output/            # Optimization output
-├── requirements.txt
-├── Dockerfile
+├── app/
+│   ├── main.py          # FastAPI entry point
+│   ├── api.py           # API routes and endpoints
+│   ├── parser.py        # Request parsing + session path construction
+│   ├── core.py          # Core optimization logic (MACE + ASE + GPU detection)
+│   ├── utils.py         # Rich logging wrapper
+│   └── config.py        # Configuration + environment variables
+├── models/              # MACE trained models
+├── examples/            # Example input structures
+├── output/              # Auto-generated optimization session directories
+├── .env.example         # Environment variable template
+├── requirements.txt     # Python dependencies
+├── Dockerfile           # Docker image definition
+├── docker-compose.yml   # Docker Compose configuration
 └── README.md
 ```
+
+---
+
+## ⚙️ Configuration
+
+All configuration options can be set via environment variables (`.env` file):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MACE_MODEL_PATH` | `models/mace_agnesi_medium.model` | MACE model path |
+| `OUTPUT_DIR` | `output` | Output directory |
+| `DEVICE` | `auto` | Compute device (auto-detection) |
+| `MAX_UPLOAD_SIZE_MB` | `50` | Maximum upload file size |
+| `WORKERS` | `4` | Gunicorn worker processes |
+| `UVICORN_PORT` | `4748` | Service port |
+| `LOG_LEVEL` | `INFO` | Logging level |
+
+---
+
+## 🎯 GPU Support
+
+The service automatically detects available compute devices:
+
+1. **Auto Detection** (`DEVICE=auto`):
+   - Priority: CUDA GPU > Apple Silicon MPS > CPU
+
+2. **Manual Override**:
+   - `DEVICE=cpu` - Force CPU
+   - `DEVICE=cuda` - Force CUDA
+   - `DEVICE=mps` - Force MPS
+
+**Check GPU Status:**
+```bash
+curl http://localhost:4748/info
+```
+
+---
+
+## 🔒 Security Features
+
+- ✅ File size limit (default 50MB)
+- ✅ Path traversal protection
+- ✅ File type validation (only .xyz)
+- ✅ Comprehensive exception handling
+- ✅ Health check endpoints
+
+---
 
 ## 📖 References
 
